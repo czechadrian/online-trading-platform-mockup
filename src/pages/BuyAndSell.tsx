@@ -1,9 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Col, Container, Form, Row} from "react-bootstrap";
 import {generateListOfStocksWithPrices} from "../helpers/stockHelpers";
+import {usePortfolio} from "../context/PortfolioContext";
 
 const BuyAndSell = () => {
-    const [balance, setBalance] = useState(100000);
+    const {balance, setBalance, portfolio, setPortfolio} = usePortfolio();
+
     const [symbol, setSymbol] = useState('');
     const [quantity, setQuantity] = useState(0);
     const [transactionType, setTransactionType] = useState('buy');
@@ -11,25 +13,36 @@ const BuyAndSell = () => {
 
     const handleTransaction = () => {
         if (transactionType === 'buy') {
-            const cost = parseFloat(symbol) * quantity;
+            const cost = stocksWithPrices.find(stock => stock.name === symbol).price * quantity;
             if (cost <= balance) {
                 setBalance(balance - cost);
+                setPortfolio(portfolio.find(stock => stock.name === symbol) ?
+                    portfolio.map(p => p.name === symbol ? {...p, quantity: quantity + p.quantity} : p) :
+                    [...portfolio, {name: symbol, quantity}]);
             } else {
                 alert('Insufficient funds for the purchase.');
             }
-        } else {
+        } else if (portfolio.find(stock => stock.name === symbol)) {
+            if (portfolio.find(stock => stock.name === symbol && stock.quantity < quantity)) {
+                alert("You don't have that many stocks.")
+            } else {
+                const profit = stocksWithPrices.find(stock => stock.name === symbol).price * quantity;
+                setBalance(balance + profit);
+                setPortfolio(portfolio.map(p => p.name === symbol ? {...p, quantity: p.quantity - quantity} : p));
+            }
         }
     };
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setStocksWithPrices(stocksWithPrices.length > 0 ?
-                generateListOfStocksWithPrices(stocksWithPrices.map(stock => stock.name)) :
-                generateListOfStocksWithPrices());
-        }, 5000);
-
-        return () => clearInterval(interval);
-    }, []);
+        if (stocksWithPrices.length === 0)
+            setStocksWithPrices(generateListOfStocksWithPrices());
+        else {
+            const interval = setInterval(() => {
+                setStocksWithPrices(generateListOfStocksWithPrices(stocksWithPrices.map(stock => stock.name)));
+            }, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [stocksWithPrices]);
 
     return (
         <Container className={'d-flex flex-column min-vw-100'}>
@@ -48,7 +61,8 @@ const BuyAndSell = () => {
                                         value={symbol}
                                         onChange={(e) => setSymbol(e.target.value)}
                                     >
-                                        {stocksWithPrices.map(stock => <option>{stock.name}</option>)}
+                                        <option>Select stock symbol</option>
+                                        {stocksWithPrices.map(stock => <option key={stock.name}>{stock.name}</option>)}
                                     </Form.Control>
                                 </Form.Group>
                                 {symbol && (<Form.Group controlId="price">
@@ -56,7 +70,7 @@ const BuyAndSell = () => {
                                     <Form.Control
                                         disabled={true}
                                         type="text"
-                                        value={stocksWithPrices.find(stock => stock.name = symbol).price}
+                                        value={stocksWithPrices.find(stock => stock.name === symbol).price}
                                     />
                                 </Form.Group>)}
                                 <Form.Group controlId="quantity">
