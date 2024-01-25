@@ -32,24 +32,26 @@ const Login: React.FC = () => {
 
     return (
         <section className="d-flex justify-content-center align-items-center vh-100 vw-100">
-            <div className="login-inner-element d-flex flex-column shadow-lg bg-white rounded">
-                <h2 className="d-flex justify-content-center mb-4">Login</h2>
+            <div className="login-inner-element p-4 d-flex flex-column shadow-lg bg-white rounded" style={{ maxWidth: "400px", width: "100%" }}>
+                <h2 className="text-center mb-4">Login</h2>
                 <Form className="d-flex flex-column" onSubmit={handleSubmit}>
                     <Form.Group className="mb-3" controlId="formBasicEmail">
                         <Form.Label>Email address</Form.Label>
-                        <Form.Control onChange={handleChange} type="email" placeholder="Enter email"/>
+                        <Form.Control onChange={handleChange} type="email" placeholder="Enter email" className="py-2"/>
                     </Form.Group>
                     <Form.Group className="mb-4" controlId="formBasicPassword">
                         <Form.Label>Password</Form.Label>
-                        <Form.Control onChange={handleChange} type="password" placeholder="Password"/>
+                        <Form.Control onChange={handleChange} type="password" placeholder="Password" className="py-2"/>
                     </Form.Group>
-                    <Button variant="primary" type="submit">
+                    <Button variant="primary" type="submit" className="py-2 mb-3">
                         Sign in
                     </Button>
-                    <Form.Text className="text-muted">
-                        {/*//TODO: link to be signed up to be added*/}
-                        Don't have an account? <Link to={"/"}>Sign up</Link>
-                    </Form.Text>
+                    <div className="text-center">
+                        <Form.Text className="text-muted">
+                            {/*//TODO: link to be signed up to be added*/}
+                            Don't have an account? <Link to={"/signup"}>Sign up</Link>
+                        </Form.Text>
+                    </div>
                 </Form>
             </div>
         </section>

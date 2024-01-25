@@ -4,12 +4,11 @@ import {generateListOfStocksWithPrices} from "../helpers/stockHelpers";
 import {usePortfolio} from "../context/PortfolioContext";
 
 const BuyAndSell = () => {
-    const {balance, setBalance, portfolio, setPortfolio} = usePortfolio();
+    const {balance, setBalance, portfolio, setPortfolio, stocksWithPrices } = usePortfolio();
 
     const [symbol, setSymbol] = useState('');
     const [quantity, setQuantity] = useState(0);
     const [transactionType, setTransactionType] = useState('buy');
-    const [stocksWithPrices, setStocksWithPrices] = useState([]);
 
     const handleTransaction = () => {
         if (transactionType === 'buy') {
@@ -33,75 +32,99 @@ const BuyAndSell = () => {
         }
     };
 
-    useEffect(() => {
-        if (stocksWithPrices.length === 0)
-            setStocksWithPrices(generateListOfStocksWithPrices());
-        else {
-            const interval = setInterval(() => {
-                setStocksWithPrices(generateListOfStocksWithPrices(stocksWithPrices.map(stock => stock.name)));
-            }, 5000);
-            return () => clearInterval(interval);
-        }
-    }, [stocksWithPrices]);
+    const costOfTransaction = () => (quantity * stocksWithPrices.find(stock => stock.name === symbol)?.price).toFixed(2);
 
     return (
-        <Container className={'d-flex flex-column min-vw-100'}>
-            <h2>Buy and Sell Assets</h2>
-            <Row>
-                <Col md={6}>
-                    <Card>
-                        <Card.Body>
-                            <h4>Your Balance: ${balance.toFixed(2)}</h4>
-                            <Form>
-                                <Form.Group controlId="symbol">
-                                    <Form.Label>Stock Symbol</Form.Label>
-                                    <Form.Control
-                                        as="select"
-                                        placeholder="Choose stock symbol"
-                                        value={symbol}
-                                        onChange={(e) => setSymbol(e.target.value)}
+        <Container className="d-flex justify-content-center align-items-center vh-100 min-vw-100">
+            <div className="m-5 p-5 d-flex flex-column shadow bg-light rounded" style={{ minWidth: '75vw', minHeight: '75vh' }}>
+                <h2 className="text-center mb-4">Buy and Sell Assets</h2>
+                <Row className="d-flex justify-content-center">
+                    <Col md={8} lg={6}>
+                        <Card className="border-0">
+                            <Card.Header className="d-flex justify-content-center bg-primary text-white">Transaction Details</Card.Header>
+                            <Card.Body>
+                                <h4 className="mb-3">Your Balance: ${balance.toFixed(2)}</h4>
+                                <Form>
+                                    <Form.Group controlId="symbol" className="mb-3">
+                                        <Form.Label>Stock Symbol</Form.Label>
+                                        <Form.Control
+                                            as="select"
+                                            className="form-select"
+                                            value={symbol}
+                                            onChange={(e) => setSymbol(e.target.value)}
+                                        >
+                                            <option>Select stock symbol</option>
+                                            {stocksWithPrices.map(stock => (
+                                                <option key={stock.name} value={stock.name}>{stock.name}</option>
+                                            ))}
+                                        </Form.Control>
+                                    </Form.Group>
+                                    {symbol && (
+                                        <Form.Group controlId="price" className="mb-3">
+                                            <Form.Label>Stock Price</Form.Label>
+                                            <Form.Control
+                                                disabled
+                                                type="text"
+                                                className="form-control-plaintext"
+                                                value={stocksWithPrices.find(stock => stock.name === symbol).price}
+                                            />
+                                        </Form.Group>
+                                    )}
+                                    <Form.Group controlId="quantity" className="mb-3">
+                                        <Form.Label>Quantity</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            className="form-control"
+                                            value={quantity}
+                                            onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                                        />
+                                    </Form.Group>
+                                    {portfolio.find(stock => stock.name === symbol) && portfolio.find(stock => stock.name === symbol).quantity ? (<Form.Group controlId="quantityOfAcquiredStocks" className="mb-3">
+                                        <Form.Label>Bought Stocks</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            className="form-control"
+                                            value={portfolio.find(stock => stock.name === symbol).quantity}
+                                            disabled={true}
+                                        />
+                                    </Form.Group>) : <></>}
+                                    <Form.Group controlId="Cost" className="mb-3">
+                                        <Form.Label>Cost</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            className="form-control"
+                                            value={costOfTransaction()}
+                                            disabled={true}
+                                        />
+                                    </Form.Group>
+                                    <Form.Group controlId="transactionType" className="mb-3">
+                                        <Form.Label>Transaction Type</Form.Label>
+                                        <Form.Control
+                                            as="select"
+                                            className="form-select"
+                                            value={transactionType}
+                                            onChange={(e) => setTransactionType(e.target.value)}
+                                        >
+                                            <option value="buy">Buy</option>
+                                            <option value="sell">Sell</option>
+                                        </Form.Control>
+                                    </Form.Group>
+                                    <Button
+                                        variant={transactionType === 'buy' ? costOfTransaction() > balance ? 'disabled' : 'success' : 'danger'}
+                                        className="w-100"
+                                        onClick={handleTransaction}
+                                        disabled={transactionType === 'buy' && costOfTransaction() > balance}
                                     >
-                                        <option>Select stock symbol</option>
-                                        {stocksWithPrices.map(stock => <option key={stock.name}>{stock.name}</option>)}
-                                    </Form.Control>
-                                </Form.Group>
-                                {symbol && (<Form.Group controlId="price">
-                                    <Form.Label>Stock Price</Form.Label>
-                                    <Form.Control
-                                        disabled={true}
-                                        type="text"
-                                        value={stocksWithPrices.find(stock => stock.name === symbol).price}
-                                    />
-                                </Form.Group>)}
-                                <Form.Group controlId="quantity">
-                                    <Form.Label>Quantity</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="10"
-                                        value={quantity}
-                                        onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
-                                    />
-                                </Form.Group>
-                                <Form.Group controlId="transactionType">
-                                    <Form.Label>Transaction Type</Form.Label>
-                                    <Form.Control
-                                        as="select"
-                                        value={transactionType}
-                                        onChange={(e) => setTransactionType(e.target.value)}
-                                    >
-                                        <option value="buy">Buy</option>
-                                        <option value="sell">Sell</option>
-                                    </Form.Control>
-                                </Form.Group>
-                                <Button variant="primary mt-4" onClick={handleTransaction}>
-                                    Execute Transaction
-                                </Button>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+                                        {transactionType === 'buy' ? costOfTransaction() > balance ? 'Insufficient funds for the purchase.' : "Buy" : "Sell"}
+                                    </Button>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
         </Container>
+
     );
 };
 
