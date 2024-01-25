@@ -1,6 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState} from 'react';
 import {Button, Card, Col, Container, Form, Row} from "react-bootstrap";
-import {generateListOfStocksWithPrices} from "../helpers/stockHelpers";
 import {usePortfolio} from "../context/PortfolioContext";
 
 const BuyAndSell = () => {
